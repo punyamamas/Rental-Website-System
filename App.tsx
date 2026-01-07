@@ -18,9 +18,8 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 }
 
 // ---- BRAND CONFIGURATIONS (The Multi-Tenant Setup) ----
-// NOTE: These domains are for DEMO purposes. 
-// In a real deployment, you would configure these in your DNS provider and Vercel Project Settings.
-// For this demo, use the 'Simulate' buttons or the Admin Settings 'Domain Binding' feature.
+// NOTE: These domains are VIRTUAL ALIASES for the demo. 
+// They work by matching the 'domain' query parameter or localStorage binding.
 const BRAND_CONFIGS: BrandProfile[] = [
   {
     id: Branch.JAKARTA_CENTRAL,
@@ -34,7 +33,7 @@ const BRAND_CONFIGS: BrandProfile[] = [
       accent: "emerald-400"
     },
     logoIcon: "mountain",
-    domains: ["fourteen-pwt.demo", "pwt.local"] 
+    domains: ["jakarta", "pwt", "central"] 
   },
   {
     id: Branch.BANDUNG_NORTH,
@@ -48,7 +47,7 @@ const BRAND_CONFIGS: BrandProfile[] = [
       accent: "blue-400"
     },
     logoIcon: "tent",
-    domains: ["fourteen-pbg.demo", "pbg.local"]
+    domains: ["bandung", "pbg", "north"]
   },
   {
     id: Branch.BALI_SOUTH,
@@ -62,7 +61,7 @@ const BRAND_CONFIGS: BrandProfile[] = [
       accent: "orange-400"
     },
     logoIcon: "compass",
-    domains: ["mamas-bali.demo", "bali.local"]
+    domains: ["bali", "mamas", "south"]
   }
 ];
 
@@ -165,9 +164,24 @@ export default function App() {
             setViewMode('shop');
             return;
         }
+        
+        // Check if it matches a custom binding created by user
+        const bindingsStr = localStorage.getItem('domain_bindings');
+        if (bindingsStr) {
+             const bindings = JSON.parse(bindingsStr);
+             const boundBranchId = bindings[domainParam];
+             if (boundBranchId) {
+                const boundBrand = BRAND_CONFIGS.find(b => b.id === boundBranchId);
+                if (boundBrand) {
+                    setSelectedBrand(boundBrand);
+                    setViewMode('shop');
+                    return;
+                }
+             }
+        }
     }
 
-    // Priority 2: LocalStorage Domain Bindings (Manual Override)
+    // Priority 2: LocalStorage Domain Bindings (Manual Override for Root Domain)
     const bindingsStr = localStorage.getItem('domain_bindings');
     if (bindingsStr) {
         const bindings = JSON.parse(bindingsStr);
@@ -248,7 +262,8 @@ export default function App() {
   };
 
   const clearSimulation = () => {
-    window.location.search = ''; 
+    // Navigate to root without query params
+    window.location.href = window.location.pathname;
   };
 
   // ---- ROUTER VIEW SWITCHING ----
@@ -272,9 +287,10 @@ export default function App() {
     return (
       <>
         {simulatedDomain && (
-            <div className="fixed top-0 left-0 w-full bg-yellow-500 text-black text-xs font-bold text-center py-1 z-[100] flex justify-center items-center gap-2">
-                <span>⚠️ Simulating Visit from: {simulatedDomain}</span>
-                <button onClick={clearSimulation} className="bg-black/20 hover:bg-black/30 p-0.5 rounded"><X className="w-3 h-3"/></button>
+            <div className="fixed top-0 left-0 w-full bg-indigo-600 text-white text-xs font-bold text-center py-2 z-[100] flex justify-center items-center gap-2 shadow-lg">
+                <Globe className="w-3 h-3" />
+                <span>Virtual Store Address: {simulatedDomain}</span>
+                <button onClick={clearSimulation} className="bg-black/20 hover:bg-black/30 p-1 rounded ml-2 transition-colors"><X className="w-3 h-3"/></button>
             </div>
         )}
         
@@ -332,9 +348,9 @@ export default function App() {
                     onChange={(e) => setState(prev => ({ ...prev, currentBranch: e.target.value as Branch }))}
                     className="w-full bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 block"
                 >
-                    <option value={Branch.JAKARTA_CENTRAL}>Fourteen Adventure PWT</option>
-                    <option value={Branch.BANDUNG_NORTH}>Fourteen Adventure PBG</option>
-                    <option value={Branch.BALI_SOUTH}>Mamas Outdoor</option>
+                    <option value={Branch.JAKARTA_CENTRAL}>Fourteen PWT (Central)</option>
+                    <option value={Branch.BANDUNG_NORTH}>Fourteen PBG (North)</option>
+                    <option value={Branch.BALI_SOUTH}>Mamas Outdoor (South)</option>
                 </select>
             </div>
             
