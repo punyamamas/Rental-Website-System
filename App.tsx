@@ -7,6 +7,7 @@ import { LaundryTracker } from './components/LaundryTracker';
 import { GeminiAdvisor } from './components/GeminiAdvisor';
 import { CustomerPortal } from './components/CustomerPortal';
 import { BrandLanding } from './components/BrandLanding';
+import { AdminSettings } from './components/AdminSettings';
 import { Layout, Menu, Map, Settings, LogOut, Sun, Globe, X, ArrowLeftRight } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -17,6 +18,9 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 }
 
 // ---- BRAND CONFIGURATIONS (The Multi-Tenant Setup) ----
+// NOTE: These domains are for DEMO purposes. 
+// In a real deployment, you would configure these in your DNS provider and Vercel Project Settings.
+// For this demo, use the 'Simulate' buttons or the Admin Settings 'Domain Binding' feature.
 const BRAND_CONFIGS: BrandProfile[] = [
   {
     id: Branch.JAKARTA_CENTRAL,
@@ -30,7 +34,7 @@ const BRAND_CONFIGS: BrandProfile[] = [
       accent: "emerald-400"
     },
     logoIcon: "mountain",
-    domains: ["fourteen-pwt.vercel.app", "fourteen-pwt-app.vercel.app"] 
+    domains: ["fourteen-pwt.demo", "pwt.local"] 
   },
   {
     id: Branch.BANDUNG_NORTH,
@@ -44,7 +48,7 @@ const BRAND_CONFIGS: BrandProfile[] = [
       accent: "blue-400"
     },
     logoIcon: "tent",
-    domains: ["fourteen-pbg.vercel.app", "fourteen-pbg-app.vercel.app"]
+    domains: ["fourteen-pbg.demo", "pbg.local"]
   },
   {
     id: Branch.BALI_SOUTH,
@@ -58,7 +62,7 @@ const BRAND_CONFIGS: BrandProfile[] = [
       accent: "orange-400"
     },
     logoIcon: "compass",
-    domains: ["mamas-bali.vercel.app", "mamasoutdoor.id"]
+    domains: ["mamas-bali.demo", "bali.local"]
   }
 ];
 
@@ -127,7 +131,7 @@ const MOCK_TRANSACTIONS: any[] = [
 export default function App() {
   const [viewMode, setViewMode] = useState<'admin' | 'landing' | 'shop'>('landing');
   const [selectedBrand, setSelectedBrand] = useState<BrandProfile>(BRAND_CONFIGS[0]);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'rentals' | 'sales' | 'laundry'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'rentals' | 'sales' | 'laundry' | 'settings'>('dashboard');
   const [showAI, setShowAI] = useState(false);
   const [simulatedDomain, setSimulatedDomain] = useState<string | null>(null);
   const [detectedHost, setDetectedHost] = useState<string>('');
@@ -152,38 +156,58 @@ export default function App() {
     const searchParams = new URLSearchParams(window.location.search);
     const domainParam = searchParams.get('domain');
 
-    // Priority: Simulation Param > Real Hostname
-    const targetDomain = domainParam || hostname;
-    if (domainParam) setSimulatedDomain(domainParam);
+    // Priority 1: Simulation Param
+    if (domainParam) {
+        setSimulatedDomain(domainParam);
+        const matchedBrand = BRAND_CONFIGS.find(b => b.domains.includes(domainParam));
+        if (matchedBrand) {
+            setSelectedBrand(matchedBrand);
+            setViewMode('shop');
+            return;
+        }
+    }
 
-    // 3. Find if this domain belongs to a specific brand
-    const matchedBrand = BRAND_CONFIGS.find(b => b.domains.includes(targetDomain));
+    // Priority 2: LocalStorage Domain Bindings (Manual Override)
+    const bindingsStr = localStorage.getItem('domain_bindings');
+    if (bindingsStr) {
+        const bindings = JSON.parse(bindingsStr);
+        const boundBranchId = bindings[hostname];
+        if (boundBranchId) {
+             const boundBrand = BRAND_CONFIGS.find(b => b.id === boundBranchId);
+             if (boundBrand) {
+                 setSelectedBrand(boundBrand);
+                 setViewMode('shop');
+                 // Also set as selected branch for persistence
+                 localStorage.setItem('selected_branch_id', boundBranchId);
+                 return;
+             }
+        }
+    }
 
+    // Priority 3: Hardcoded Domain Matches
+    const matchedBrand = BRAND_CONFIGS.find(b => b.domains.includes(hostname));
     if (matchedBrand) {
-        // If matched via Domain, force it
         setSelectedBrand(matchedBrand);
         setViewMode('shop');
-        // Save to storage to persist preference if they later visit a generic domain
         localStorage.setItem('selected_branch_id', matchedBrand.id);
-    } else {
-        // 4. If No Domain Match, check LocalStorage (Persistence)
-        const savedBranchId = localStorage.getItem('selected_branch_id');
-        const savedBrand = BRAND_CONFIGS.find(b => b.id === savedBranchId);
+        return;
+    }
 
-        if (savedBrand) {
-             setSelectedBrand(savedBrand);
-             setViewMode('shop');
-        } else {
-             // If no match and no saved pref, show landing
-             setViewMode('landing');
-        }
+    // Priority 4: Last Visited Shop (Persistence)
+    const savedBranchId = localStorage.getItem('selected_branch_id');
+    const savedBrand = BRAND_CONFIGS.find(b => b.id === savedBranchId);
+    
+    if (savedBrand) {
+         setSelectedBrand(savedBrand);
+         setViewMode('shop');
+    } else {
+         setViewMode('landing');
     }
 
   }, []);
 
   // Action Handlers
   const handleNewTransaction = (transaction: any) => {
-    // Determine branch: use the one in transaction (from customer portal) or fallback to current admin branch
     const branchForTx = transaction.branch || state.currentBranch;
 
     const newTx = {
@@ -214,19 +238,17 @@ export default function App() {
   const handleEnterShop = (brand: BrandProfile) => {
     setSelectedBrand(brand);
     setViewMode('shop');
-    // Save preference
     localStorage.setItem('selected_branch_id', brand.id);
   };
 
   const handleSwitchBrand = () => {
-    // Clear persistence and go back to landing
     localStorage.removeItem('selected_branch_id');
     if (simulatedDomain) clearSimulation();
     else setViewMode('landing');
   };
 
   const clearSimulation = () => {
-    window.location.search = ''; // Reloads page clearing params
+    window.location.search = ''; 
   };
 
   // ---- ROUTER VIEW SWITCHING ----
@@ -239,7 +261,6 @@ export default function App() {
                 onSelectBrand={handleEnterShop}
                 onAdminLogin={() => setViewMode('admin')}
             />
-            {/* Developer Helper: Show current domain so user knows what to put in config */}
             <div className="fixed bottom-2 right-2 text-[10px] text-slate-600 bg-slate-900/80 px-2 py-1 rounded border border-slate-800 pointer-events-none">
                 Detected: {detectedHost}
             </div>
@@ -250,7 +271,6 @@ export default function App() {
   if (viewMode === 'shop') {
     return (
       <>
-        {/* Simulation Banner - only shows if we are simulating */}
         {simulatedDomain && (
             <div className="fixed top-0 left-0 w-full bg-yellow-500 text-black text-xs font-bold text-center py-1 z-[100] flex justify-center items-center gap-2">
                 <span>⚠️ Simulating Visit from: {simulatedDomain}</span>
@@ -258,7 +278,6 @@ export default function App() {
             </div>
         )}
         
-        {/* Brand Switcher Overlay Button (For Demo/Testing convenience) */}
         {!simulatedDomain && (
             <button 
                 onClick={handleSwitchBrand}
@@ -300,6 +319,9 @@ export default function App() {
             <NavItem active={activeTab === 'rentals'} onClick={() => setActiveTab('rentals')} icon={Map} label="Rentals & Bookings" />
             <NavItem active={activeTab === 'sales'} onClick={() => setActiveTab('sales')} icon={Menu} label="Retail POS" />
             <NavItem active={activeTab === 'laundry'} onClick={() => setActiveTab('laundry')} icon={Sun} label="Laundry Service" />
+            <div className="pt-4 mt-4 border-t border-slate-800">
+                <NavItem active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={Settings} label="System Settings" />
+            </div>
         </div>
 
         <div className="p-4 border-t border-slate-800 space-y-3">
@@ -331,13 +353,13 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
         <header className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-8">
             <h1 className="text-xl font-semibold text-white">
                 {activeTab === 'dashboard' && 'Executive Dashboard'}
                 {activeTab === 'rentals' && 'Rental Operations'}
                 {activeTab === 'sales' && 'Point of Sale'}
                 {activeTab === 'laundry' && 'Service Center'}
+                {activeTab === 'settings' && 'System Configuration'}
             </h1>
             
             <button 
@@ -352,16 +374,15 @@ export default function App() {
             </button>
         </header>
 
-        {/* Dynamic Content */}
         <div className="flex-1 p-8 overflow-hidden relative">
             <div className="h-full overflow-y-auto pr-2 pb-20">
                 {activeTab === 'dashboard' && <Dashboard state={state} />}
                 {activeTab === 'rentals' && <RentalSystem state={state} onNewRental={handleNewTransaction} />}
                 {activeTab === 'sales' && <SalesPOS state={state} onNewSale={handleNewTransaction} />}
                 {activeTab === 'laundry' && <LaundryTracker state={state} onUpdateStatus={handleUpdateLaundryStatus} />}
+                {activeTab === 'settings' && <AdminSettings detectedHost={detectedHost} />}
             </div>
 
-            {/* AI Overlay Panel */}
             {showAI && (
                 <div className="absolute top-4 right-4 w-96 z-50 animate-in slide-in-from-right fade-in duration-300">
                     <GeminiAdvisor state={state} />
@@ -373,7 +394,6 @@ export default function App() {
   );
 }
 
-// Nav Item Component
 const NavItem = ({ active, onClick, icon: Icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) => (
     <button 
         onClick={onClick}
