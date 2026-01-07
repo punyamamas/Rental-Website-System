@@ -286,23 +286,15 @@ export default function App() {
   if (viewMode === 'shop') {
     return (
       <>
-        {simulatedDomain && (
-            <div className="fixed top-0 left-0 w-full bg-indigo-600 text-white text-xs font-bold text-center py-2 z-[100] flex justify-center items-center gap-2 shadow-lg">
-                <Globe className="w-3 h-3" />
-                <span>Virtual Store Address: {simulatedDomain}</span>
-                <button onClick={clearSimulation} className="bg-black/20 hover:bg-black/30 p-1 rounded ml-2 transition-colors"><X className="w-3 h-3"/></button>
-            </div>
-        )}
+        {/* Banner removed as per user request */}
         
-        {!simulatedDomain && (
-            <button 
-                onClick={handleSwitchBrand}
-                className="fixed bottom-4 left-4 z-50 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur transition-all border border-white/10 shadow-lg group"
-                title="Switch Branch"
-            >
-                <ArrowLeftRight className="w-5 h-5 opacity-50 group-hover:opacity-100" />
-            </button>
-        )}
+        <button 
+            onClick={handleSwitchBrand}
+            className="fixed bottom-4 left-4 z-50 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur transition-all border border-white/10 shadow-lg group"
+            title="Switch Branch / Exit Store"
+        >
+            <ArrowLeftRight className="w-5 h-5 opacity-50 group-hover:opacity-100" />
+        </button>
 
         <CustomerPortal 
             state={state} 
