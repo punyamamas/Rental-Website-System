@@ -1,13 +1,24 @@
 import { GoogleGenAI } from "@google/genai";
 import { AppState, Branch, TransactionType } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Remove top-level initialization to prevent runtime crash in browser
+// const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const getBusinessInsights = async (
   state: AppState, 
   query: string
 ): Promise<string> => {
   try {
+    // Initialize lazily only when requested
+    // Safe check for process.env to avoid browser reference errors
+    const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) ? process.env.API_KEY : '';
+    
+    if (!apiKey) {
+        return "AI Configuration missing: API Key not found. Please check your environment variables.";
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+
     // We summarize the state to avoid token limits with raw data dumps
     const summary = {
       currentBranch: state.currentBranch,
