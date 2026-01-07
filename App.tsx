@@ -30,7 +30,8 @@ const BRAND_CONFIGS: BrandProfile[] = [
       accent: "emerald-400"
     },
     logoIcon: "mountain",
-    domains: ["fourteenadventure.vercel.com", "fourteen-pwt.com"]
+    // UPDATE: Gunakan nama domain yang baru Anda daftarkan di Vercel
+    domains: ["fourteen-pwt-app.vercel.com", "fourteen-pwt.com"]
   },
   {
     id: Branch.BANDUNG_NORTH,
@@ -44,7 +45,8 @@ const BRAND_CONFIGS: BrandProfile[] = [
       accent: "blue-400"
     },
     logoIcon: "tent",
-    domains: ["fourteenadvpbg.vercel.com", "fourteen-pbg.com"]
+    // UPDATE: Gunakan nama domain yang baru Anda daftarkan di Vercel
+    domains: ["fourteen-pbg-app.vercel.com", "fourteen-pbg.com"]
   },
   {
     id: Branch.BALI_SOUTH,
@@ -58,7 +60,8 @@ const BRAND_CONFIGS: BrandProfile[] = [
       accent: "orange-400"
     },
     logoIcon: "compass",
-    domains: ["mamas-outdoor.vercel.com", "mamasoutdoor.id"]
+    // UPDATE: Gunakan nama domain yang baru Anda daftarkan di Vercel
+    domains: ["mamas-bali-app.vercel.com", "mamasoutdoor.id"]
   }
 ];
 
