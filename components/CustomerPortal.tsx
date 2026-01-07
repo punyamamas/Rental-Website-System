@@ -8,9 +8,10 @@ interface CustomerPortalProps {
   onNewBooking: (transaction: any) => void;
   onBackToLanding: () => void;
   onSwitchToAdmin?: () => void;
+  showBackButton?: boolean;
 }
 
-export const CustomerPortal: React.FC<CustomerPortalProps> = ({ state, brand, onNewBooking, onBackToLanding, onSwitchToAdmin }) => {
+export const CustomerPortal: React.FC<CustomerPortalProps> = ({ state, brand, onNewBooking, onBackToLanding, onSwitchToAdmin, showBackButton = true }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [bookingItem, setBookingItem] = useState<Product | null>(null);
   const [customerName, setCustomerName] = useState('');
@@ -62,9 +63,11 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ state, brand, on
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-20">
                 <div className="flex items-center gap-3">
-                    <button onClick={onBackToLanding} className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 group">
-                        <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:text-white" />
-                    </button>
+                    {showBackButton && (
+                        <button onClick={onBackToLanding} className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 group">
+                            <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:text-white" />
+                        </button>
+                    )}
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white shadow-lg ${themeBg}`}>
                         {brand.shortName.substring(0, 1)}
                     </div>

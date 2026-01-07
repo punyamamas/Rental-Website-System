@@ -286,15 +286,15 @@ export default function App() {
   if (viewMode === 'shop') {
     return (
       <>
-        {/* Banner removed as per user request */}
-        
-        <button 
-            onClick={handleSwitchBrand}
-            className="fixed bottom-4 left-4 z-50 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur transition-all border border-white/10 shadow-lg group"
-            title="Switch Branch / Exit Store"
-        >
-            <ArrowLeftRight className="w-5 h-5 opacity-50 group-hover:opacity-100" />
-        </button>
+        {!simulatedDomain && (
+            <button 
+                onClick={handleSwitchBrand}
+                className="fixed bottom-4 left-4 z-50 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur transition-all border border-white/10 shadow-lg group"
+                title="Switch Branch / Exit Store"
+            >
+                <ArrowLeftRight className="w-5 h-5 opacity-50 group-hover:opacity-100" />
+            </button>
+        )}
 
         <CustomerPortal 
             state={state} 
@@ -302,6 +302,7 @@ export default function App() {
             onNewBooking={handleNewTransaction} 
             onBackToLanding={handleSwitchBrand}
             onSwitchToAdmin={() => setViewMode('admin')} 
+            showBackButton={!simulatedDomain}
         />
       </>
     );
