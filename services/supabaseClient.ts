@@ -1,11 +1,38 @@
 import { createClient } from '@supabase/supabase-js';
 
-// NOTE: In a real production app, these should be in a .env file.
-// For this demo, we check if they exist in the process.env provided by the environment
-// or fall back to empty strings which will trigger "Offline/Mock Mode" in the dataService.
+// Robust Environment Variable Loader
+// Supports: Vite (import.meta.env), Next.js (process.env.NEXT_PUBLIC_), CRA (process.env.REACT_APP_)
 
-const supabaseUrl = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SUPABASE_URL) || process.env?.SUPABASE_URL || '';
-const supabaseKey = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY) || process.env?.SUPABASE_ANON_KEY || '';
+const getEnvVar = (key: string) => {
+  // 1. Try Vite (Standard for this project structure)
+  // @ts-ignore
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    // @ts-ignore
+    const viteVar = import.meta.env[`VITE_${key}`] || import.meta.env[key];
+    if (viteVar) return viteVar;
+  }
+
+  // 2. Try Standard Process Env (Fallback for other build tools)
+  if (typeof process !== 'undefined' && process.env) {
+    // Check various prefixes commonly used by build tools
+    return process.env[`VITE_${key}`] ||
+           process.env[`NEXT_PUBLIC_${key}`] ||
+           process.env[`REACT_APP_${key}`] ||
+           process.env[key];
+  }
+
+  return '';
+};
+
+const supabaseUrl = getEnvVar('SUPABASE_URL');
+const supabaseKey = getEnvVar('SUPABASE_ANON_KEY');
+
+// Debug log to help troubleshooting (visible in browser console)
+console.log('Supabase Connection Status:', {
+  urlConfigured: !!supabaseUrl,
+  keyConfigured: !!supabaseKey,
+  mode: supabaseUrl && supabaseKey ? 'Online (Cloud DB)' : 'Offline (Local Mock Data)'
+});
 
 export const supabase = supabaseUrl && supabaseKey 
   ? createClient(supabaseUrl, supabaseKey) 
