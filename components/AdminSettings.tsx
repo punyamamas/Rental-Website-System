@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Branch, BrandProfile } from '../types';
-import { Globe, Trash2, Plus, Copy, ExternalLink, Link as LinkIcon, Info, Building, Store } from 'lucide-react';
+import { Globe, Trash2, Plus, Copy, ExternalLink, Link as LinkIcon, Info, Building, Store, Palette, Check } from 'lucide-react';
 
 interface AdminSettingsProps {
   detectedHost: string;
   brands?: BrandProfile[];
   onCreateBrand?: (brand: BrandProfile) => void;
 }
+
+const TAILWIND_COLORS = [
+    'slate', 'stone', 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 
+    'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 
+    'fuchsia', 'pink', 'rose'
+];
 
 export const AdminSettings: React.FC<AdminSettingsProps> = ({ detectedHost, brands = [], onCreateBrand }) => {
   const [bindings, setBindings] = useState<Record<string, string>>({});
@@ -18,6 +24,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ detectedHost, bran
   const [newBrandName, setNewBrandName] = useState('');
   const [newBrandShort, setNewBrandShort] = useState('');
   const [newBrandColor, setNewBrandColor] = useState('emerald');
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('domain_bindings');
@@ -91,6 +98,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ detectedHost, bran
         onCreateBrand(newBrand);
         setNewBrandName('');
         setNewBrandShort('');
+        setNewBrandColor('emerald');
         alert('New branch created successfully! You can now generate links for it.');
     }
   };
@@ -135,44 +143,66 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ detectedHost, bran
                                 className="w-full bg-slate-900 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                             />
                         </div>
-                         <div>
+                         
+                         {/* ENHANCED COLOR PICKER */}
+                         <div className="relative">
                             <label className="text-xs text-slate-500 mb-1 block">Brand Theme Color</label>
-                            <div className="flex gap-2">
-                                {['emerald', 'blue', 'orange', 'purple', 'rose', 'cyan'].map(c => (
-                                    <button 
-                                        key={c}
-                                        onClick={() => setNewBrandColor(c)}
-                                        className={`w-6 h-6 rounded-full border-2 transition-all ${newBrandColor === c ? 'border-white scale-110' : 'border-transparent opacity-50 hover:opacity-100'}`}
-                                        style={{ backgroundColor: `var(--color-${c}-500, ${c})` }}
-                                        title={c}
-                                    />
-                                ))}
-                                <span className="text-xs text-slate-500 self-center capitalize">{newBrandColor}</span>
-                            </div>
+                            <button
+                                onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
+                                className="w-full flex items-center justify-between gap-3 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none hover:border-slate-500 transition-colors group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-5 h-5 rounded-full bg-${newBrandColor}-500 shadow-sm ring-1 ring-white/10`} />
+                                    <span className="capitalize text-white group-hover:text-emerald-400 transition-colors">{newBrandColor}</span>
+                                </div>
+                                <Palette className="w-4 h-4 text-slate-500" />
+                            </button>
+
+                            {isColorPickerOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setIsColorPickerOpen(false)}></div>
+                                    <div className="absolute top-full left-0 right-0 mt-2 p-3 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl z-20 grid grid-cols-5 gap-2 animate-in fade-in zoom-in-95 duration-100 max-h-48 overflow-y-auto">
+                                        {TAILWIND_COLORS.map(c => (
+                                            <button
+                                                key={c}
+                                                onClick={() => {
+                                                    setNewBrandColor(c);
+                                                    setIsColorPickerOpen(false);
+                                                }}
+                                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform hover:scale-110 ${newBrandColor === c ? 'ring-2 ring-white scale-110' : 'ring-1 ring-white/10'} bg-${c}-500`}
+                                                title={c}
+                                            >
+                                                {newBrandColor === c && <Check className="w-4 h-4 text-white drop-shadow-md" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
+
                         <button 
                             onClick={handleCreateBrandSubmit}
                             disabled={!newBrandName || !newBrandShort}
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:text-slate-500 text-white py-2 rounded-lg text-sm font-bold transition-all mt-2"
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:text-slate-500 text-white py-2 rounded-lg text-sm font-bold transition-all mt-2 shadow-lg shadow-emerald-900/20"
                         >
                             Create Branch
                         </button>
                     </div>
                 </div>
 
-                <div className="md:col-span-2 bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg overflow-hidden">
+                <div className="md:col-span-2 bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg overflow-hidden flex flex-col">
                     <h3 className="text-lg font-bold text-white mb-4">Active Branches</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto pr-2">
                         {brands.map(brand => (
-                            <div key={brand.id} className="bg-slate-900 border border-slate-700 p-3 rounded-lg flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded flex items-center justify-center font-bold text-white bg-${brand.theme.primary}-600`}>
+                            <div key={brand.id} className="bg-slate-900 border border-slate-700 p-3 rounded-lg flex items-center gap-3 group hover:border-slate-600 transition-colors">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white bg-${brand.theme.primary}-600 shadow-inner`}>
                                     {brand.shortName.charAt(0)}
                                 </div>
-                                <div>
-                                    <div className="text-sm font-bold text-white">{brand.shortName}</div>
-                                    <div className="text-xs text-slate-500 truncate max-w-[150px]">{brand.name}</div>
+                                <div className="min-w-0">
+                                    <div className="text-sm font-bold text-white truncate">{brand.shortName}</div>
+                                    <div className="text-xs text-slate-500 truncate">{brand.name}</div>
                                 </div>
-                                <div className="ml-auto text-[10px] text-slate-600 font-mono bg-slate-950 px-2 py-1 rounded">
+                                <div className="ml-auto text-[10px] text-slate-600 font-mono bg-slate-950 px-2 py-1 rounded border border-slate-800">
                                     {brand.id}
                                 </div>
                             </div>
