@@ -1,20 +1,37 @@
 import { GoogleGenAI } from "@google/genai";
 import { AppState, Branch, TransactionType } from "../types";
 
-// Remove top-level initialization to prevent runtime crash in browser
-// const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to safely get environment variable in various environments
+const getApiKey = () => {
+    // 1. Try Vite / Modern Browsers
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+        // @ts-ignore
+        return import.meta.env.VITE_API_KEY;
+    }
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.API_KEY) {
+        // @ts-ignore
+        return import.meta.env.API_KEY;
+    }
+
+    // 2. Try Standard Process Env (Node/Webpack/Next.js)
+    if (typeof process !== 'undefined' && process.env) {
+        return process.env.API_KEY || process.env.VITE_API_KEY || process.env.NEXT_PUBLIC_API_KEY || '';
+    }
+    
+    return '';
+};
 
 export const getBusinessInsights = async (
   state: AppState, 
   query: string
 ): Promise<string> => {
   try {
-    // Initialize lazily only when requested
-    // Safe check for process.env to avoid browser reference errors
-    const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) ? process.env.API_KEY : '';
+    const apiKey = getApiKey();
     
     if (!apiKey) {
-        return "AI Configuration missing: API Key not found. Please check your environment variables.";
+        return "AI Configuration missing: API Key not found. Please ensure VITE_API_KEY or API_KEY is set in your environment variables.";
     }
 
     const ai = new GoogleGenAI({ apiKey });
