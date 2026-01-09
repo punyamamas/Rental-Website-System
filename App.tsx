@@ -8,7 +8,8 @@ import { GeminiAdvisor } from './components/GeminiAdvisor';
 import { CustomerPortal } from './components/CustomerPortal';
 import { BrandLanding } from './components/BrandLanding';
 import { AdminSettings } from './components/AdminSettings';
-import { Layout, Menu, Map, Settings, LogOut, Sun, Globe, X, ArrowLeftRight } from 'lucide-react';
+import { InventoryMaster } from './components/InventoryMaster';
+import { Layout, Menu, Map, Settings, LogOut, Sun, Globe, X, ArrowLeftRight, Archive } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -125,7 +126,7 @@ const MOCK_TRANSACTIONS: any[] = [
 
 export default function App() {
   const [viewMode, setViewMode] = useState<'admin' | 'landing' | 'shop'>('landing');
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'rentals' | 'sales' | 'laundry' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'inventory' | 'rentals' | 'sales' | 'laundry' | 'settings'>('dashboard');
   const [showAI, setShowAI] = useState(false);
   const [simulatedDomain, setSimulatedDomain] = useState<string | null>(null);
   const [detectedHost, setDetectedHost] = useState<string>('');
@@ -258,6 +259,40 @@ export default function App() {
     }));
   };
 
+  const handleSaveProduct = (product: Product) => {
+    setState(prev => {
+        const existingIndex = prev.products.findIndex(p => p.id === product.id);
+        if (existingIndex >= 0) {
+            // Update existing
+            const updatedProducts = [...prev.products];
+            updatedProducts[existingIndex] = product;
+            return { ...prev, products: updatedProducts };
+        } else {
+            // Add new
+            return { ...prev, products: [...prev.products, product] };
+        }
+    });
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    // In a real app we might archive it, here we just remove for simplicity
+    // or set active=false. For this request, we just skip implementation to keep it safe.
+    // Ideally we just hide it from the current branch by setting stock to 0.
+    setState(prev => ({
+        ...prev,
+        products: prev.products.map(p => {
+             if (p.id === productId) {
+                 return {
+                     ...p,
+                     stock: { ...p.stock, [prev.currentBranch]: 0 },
+                     priceRentPerDay: { ...p.priceRentPerDay, [prev.currentBranch]: 0 }
+                 };
+             }
+             return p;
+        })
+    }));
+  };
+
   const handleEnterShop = (brand: BrandProfile) => {
     setSelectedBrand(brand);
     setViewMode('shop');
@@ -342,6 +377,7 @@ export default function App() {
 
         <div className="flex-1 py-6 px-3 space-y-1">
             <NavItem active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={Layout} label="Overview" />
+            <NavItem active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} icon={Archive} label="Master Data (Sewa)" />
             <NavItem active={activeTab === 'rentals'} onClick={() => setActiveTab('rentals')} icon={Map} label="Rentals & Bookings" />
             <NavItem active={activeTab === 'sales'} onClick={() => setActiveTab('sales')} icon={Menu} label="Retail POS" />
             <NavItem active={activeTab === 'laundry'} onClick={() => setActiveTab('laundry')} icon={Sun} label="Laundry Service" />
@@ -382,6 +418,7 @@ export default function App() {
         <header className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-8">
             <h1 className="text-xl font-semibold text-white">
                 {activeTab === 'dashboard' && 'Executive Dashboard'}
+                {activeTab === 'inventory' && 'Inventory Master Data'}
                 {activeTab === 'rentals' && 'Rental Operations'}
                 {activeTab === 'sales' && 'Point of Sale'}
                 {activeTab === 'laundry' && 'Service Center'}
@@ -403,6 +440,7 @@ export default function App() {
         <div className="flex-1 p-8 overflow-hidden relative">
             <div className="h-full overflow-y-auto pr-2 pb-20">
                 {activeTab === 'dashboard' && <Dashboard state={state} />}
+                {activeTab === 'inventory' && <InventoryMaster state={state} onSaveProduct={handleSaveProduct} onDeleteProduct={handleDeleteProduct} />}
                 {activeTab === 'rentals' && <RentalSystem state={state} onNewRental={handleNewTransaction} />}
                 {activeTab === 'sales' && <SalesPOS state={state} onNewSale={handleNewTransaction} />}
                 {activeTab === 'laundry' && <LaundryTracker state={state} onUpdateStatus={handleUpdateLaundryStatus} />}
