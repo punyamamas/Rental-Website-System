@@ -19,11 +19,14 @@ export const getBusinessInsights = async (
 
     const ai = new GoogleGenAI({ apiKey });
 
+    // Derive active branches from transaction history since Branch is a dynamic string type
+    const uniqueBranches = Array.from(new Set(state.transactions.map(t => t.branch)));
+
     // We summarize the state to avoid token limits with raw data dumps
     const summary = {
       currentBranch: state.currentBranch,
       totalTransactions: state.transactions.length,
-      revenueByBranch: Object.values(Branch).reduce((acc, branch) => {
+      revenueByBranch: uniqueBranches.reduce((acc, branch) => {
         acc[branch] = state.transactions
           .filter(t => t.branch === branch)
           .reduce((sum, t) => sum + t.totalAmount, 0);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Branch, AppState, TransactionType, RentalStatus, LaundryStatus, Product, BrandProfile } from './types';
+import { Branch, AppState, TransactionType, RentalStatus, LaundryStatus, Product, BrandProfile, DefaultBranches } from './types';
 import { Dashboard } from './components/Dashboard';
 import { RentalSystem } from './components/RentalSystem';
 import { SalesPOS } from './components/SalesPOS';
@@ -17,12 +17,10 @@ function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
 }
 
-// ---- BRAND CONFIGURATIONS (The Multi-Tenant Setup) ----
-// NOTE: These domains are VIRTUAL ALIASES for the demo. 
-// They work by matching the 'domain' query parameter or localStorage binding.
-const BRAND_CONFIGS: BrandProfile[] = [
+// ---- DEFAULT DATA ----
+const DEFAULT_BRANDS: BrandProfile[] = [
   {
-    id: Branch.JAKARTA_CENTRAL,
+    id: DefaultBranches.JAKARTA_CENTRAL,
     name: "Fourteen Adventure Purwokerto",
     shortName: "Fourteen PWT",
     tagline: "Your Journey Starts in Purwokerto",
@@ -36,7 +34,7 @@ const BRAND_CONFIGS: BrandProfile[] = [
     domains: ["jakarta", "pwt", "central"] 
   },
   {
-    id: Branch.BANDUNG_NORTH,
+    id: DefaultBranches.BANDUNG_NORTH,
     name: "Fourteen Adventure Purbalingga",
     shortName: "Fourteen PBG",
     tagline: "Explore Purbalingga's Heights",
@@ -50,7 +48,7 @@ const BRAND_CONFIGS: BrandProfile[] = [
     domains: ["bandung", "pbg", "north"]
   },
   {
-    id: Branch.BALI_SOUTH,
+    id: DefaultBranches.BALI_SOUTH,
     name: "Mamas Outdoor",
     shortName: "Mamas Outdoor",
     tagline: "Premium Gear for Professionals",
@@ -65,113 +63,125 @@ const BRAND_CONFIGS: BrandProfile[] = [
   }
 ];
 
-// ---- MOCK DATA INITIALIZATION ----
 // Prices varied: Jakarta (PWT), Bandung (PBG), Bali (Mamas)
 const MOCK_PRODUCTS: Product[] = [
   { 
     id: '1', 
     name: 'North Face Tent 4P', 
     category: 'Tent', 
-    priceSale: { [Branch.JAKARTA_CENTRAL]: 4500000, [Branch.BANDUNG_NORTH]: 4400000, [Branch.BALI_SOUTH]: 4800000 }, 
-    priceRentPerDay: { [Branch.JAKARTA_CENTRAL]: 150000, [Branch.BANDUNG_NORTH]: 120000, [Branch.BALI_SOUTH]: 200000 }, 
-    stock: { [Branch.JAKARTA_CENTRAL]: 10, [Branch.BANDUNG_NORTH]: 5, [Branch.BALI_SOUTH]: 8 } 
+    priceSale: { [DefaultBranches.JAKARTA_CENTRAL]: 4500000, [DefaultBranches.BANDUNG_NORTH]: 4400000, [DefaultBranches.BALI_SOUTH]: 4800000 }, 
+    priceRentPerDay: { [DefaultBranches.JAKARTA_CENTRAL]: 150000, [DefaultBranches.BANDUNG_NORTH]: 120000, [DefaultBranches.BALI_SOUTH]: 200000 }, 
+    stock: { [DefaultBranches.JAKARTA_CENTRAL]: 10, [DefaultBranches.BANDUNG_NORTH]: 5, [DefaultBranches.BALI_SOUTH]: 8 } 
   },
   { 
     id: '2', 
     name: 'Deuter Aircontact 65+10', 
     category: 'Backpack', 
-    priceSale: { [Branch.JAKARTA_CENTRAL]: 3200000, [Branch.BANDUNG_NORTH]: 3100000, [Branch.BALI_SOUTH]: 3500000 }, 
-    priceRentPerDay: { [Branch.JAKARTA_CENTRAL]: 75000, [Branch.BANDUNG_NORTH]: 65000, [Branch.BALI_SOUTH]: 95000 }, 
-    stock: { [Branch.JAKARTA_CENTRAL]: 15, [Branch.BANDUNG_NORTH]: 12, [Branch.BALI_SOUTH]: 20 } 
+    priceSale: { [DefaultBranches.JAKARTA_CENTRAL]: 3200000, [DefaultBranches.BANDUNG_NORTH]: 3100000, [DefaultBranches.BALI_SOUTH]: 3500000 }, 
+    priceRentPerDay: { [DefaultBranches.JAKARTA_CENTRAL]: 75000, [DefaultBranches.BANDUNG_NORTH]: 65000, [DefaultBranches.BALI_SOUTH]: 95000 }, 
+    stock: { [DefaultBranches.JAKARTA_CENTRAL]: 15, [DefaultBranches.BANDUNG_NORTH]: 12, [DefaultBranches.BALI_SOUTH]: 20 } 
   },
   { 
     id: '3', 
     name: 'Gas Canister 230g', 
     category: 'Cooking', 
-    priceSale: { [Branch.JAKARTA_CENTRAL]: 55000, [Branch.BANDUNG_NORTH]: 50000, [Branch.BALI_SOUTH]: 75000 }, 
-    priceRentPerDay: { [Branch.JAKARTA_CENTRAL]: 0, [Branch.BANDUNG_NORTH]: 0, [Branch.BALI_SOUTH]: 0 }, 
-    stock: { [Branch.JAKARTA_CENTRAL]: 100, [Branch.BANDUNG_NORTH]: 80, [Branch.BALI_SOUTH]: 150 } 
+    priceSale: { [DefaultBranches.JAKARTA_CENTRAL]: 55000, [DefaultBranches.BANDUNG_NORTH]: 50000, [DefaultBranches.BALI_SOUTH]: 75000 }, 
+    priceRentPerDay: { [DefaultBranches.JAKARTA_CENTRAL]: 0, [DefaultBranches.BANDUNG_NORTH]: 0, [DefaultBranches.BALI_SOUTH]: 0 }, 
+    stock: { [DefaultBranches.JAKARTA_CENTRAL]: 100, [DefaultBranches.BANDUNG_NORTH]: 80, [DefaultBranches.BALI_SOUTH]: 150 } 
   },
   { 
     id: '4', 
     name: 'Sleeping Bag Mummy', 
     category: 'Accessories', 
-    priceSale: { [Branch.JAKARTA_CENTRAL]: 850000, [Branch.BANDUNG_NORTH]: 800000, [Branch.BALI_SOUTH]: 950000 }, 
-    priceRentPerDay: { [Branch.JAKARTA_CENTRAL]: 35000, [Branch.BANDUNG_NORTH]: 30000, [Branch.BALI_SOUTH]: 50000 }, 
-    stock: { [Branch.JAKARTA_CENTRAL]: 20, [Branch.BANDUNG_NORTH]: 25, [Branch.BALI_SOUTH]: 10 } 
+    priceSale: { [DefaultBranches.JAKARTA_CENTRAL]: 850000, [DefaultBranches.BANDUNG_NORTH]: 800000, [DefaultBranches.BALI_SOUTH]: 950000 }, 
+    priceRentPerDay: { [DefaultBranches.JAKARTA_CENTRAL]: 35000, [DefaultBranches.BANDUNG_NORTH]: 30000, [DefaultBranches.BALI_SOUTH]: 50000 }, 
+    stock: { [DefaultBranches.JAKARTA_CENTRAL]: 20, [DefaultBranches.BANDUNG_NORTH]: 25, [DefaultBranches.BALI_SOUTH]: 10 } 
   },
   { 
     id: '5', 
     name: 'Hiking Pole (Pair)', 
     category: 'Accessories', 
-    priceSale: { [Branch.JAKARTA_CENTRAL]: 450000, [Branch.BANDUNG_NORTH]: 420000, [Branch.BALI_SOUTH]: 500000 }, 
-    priceRentPerDay: { [Branch.JAKARTA_CENTRAL]: 25000, [Branch.BANDUNG_NORTH]: 20000, [Branch.BALI_SOUTH]: 35000 }, 
-    stock: { [Branch.JAKARTA_CENTRAL]: 30, [Branch.BANDUNG_NORTH]: 30, [Branch.BALI_SOUTH]: 15 } 
+    priceSale: { [DefaultBranches.JAKARTA_CENTRAL]: 450000, [DefaultBranches.BANDUNG_NORTH]: 420000, [DefaultBranches.BALI_SOUTH]: 500000 }, 
+    priceRentPerDay: { [DefaultBranches.JAKARTA_CENTRAL]: 25000, [DefaultBranches.BANDUNG_NORTH]: 20000, [DefaultBranches.BALI_SOUTH]: 35000 }, 
+    stock: { [DefaultBranches.JAKARTA_CENTRAL]: 30, [DefaultBranches.BANDUNG_NORTH]: 30, [DefaultBranches.BALI_SOUTH]: 15 } 
   },
   { 
     id: '6', 
     name: 'Rain Cover Universal', 
     category: 'Accessories', 
-    priceSale: { [Branch.JAKARTA_CENTRAL]: 120000, [Branch.BANDUNG_NORTH]: 110000, [Branch.BALI_SOUTH]: 150000 }, 
-    priceRentPerDay: { [Branch.JAKARTA_CENTRAL]: 10000, [Branch.BANDUNG_NORTH]: 8000, [Branch.BALI_SOUTH]: 15000 }, 
-    stock: { [Branch.JAKARTA_CENTRAL]: 50, [Branch.BANDUNG_NORTH]: 45, [Branch.BALI_SOUTH]: 60 } 
+    priceSale: { [DefaultBranches.JAKARTA_CENTRAL]: 120000, [DefaultBranches.BANDUNG_NORTH]: 110000, [DefaultBranches.BALI_SOUTH]: 150000 }, 
+    priceRentPerDay: { [DefaultBranches.JAKARTA_CENTRAL]: 10000, [DefaultBranches.BANDUNG_NORTH]: 8000, [DefaultBranches.BALI_SOUTH]: 15000 }, 
+    stock: { [DefaultBranches.JAKARTA_CENTRAL]: 50, [DefaultBranches.BANDUNG_NORTH]: 45, [DefaultBranches.BALI_SOUTH]: 60 } 
   },
 ];
 
 const MOCK_TRANSACTIONS: any[] = [
-  // Generate some dummy initial data
-  { id: 'tx-001', branch: Branch.JAKARTA_CENTRAL, date: new Date().toISOString(), type: TransactionType.SALE, totalAmount: 55000, customerName: 'Walk-in', details: {} },
-  { id: 'tx-002', branch: Branch.JAKARTA_CENTRAL, date: new Date().toISOString(), type: TransactionType.RENTAL, totalAmount: 450000, customerName: 'John Doe', details: { items: [{name: 'Tent'}], status: RentalStatus.ACTIVE, endDate: new Date(Date.now() + 86400000 * 2).toISOString() } },
-  { id: 'tx-003', branch: Branch.BANDUNG_NORTH, date: new Date().toISOString(), type: TransactionType.LAUNDRY, totalAmount: 75000, customerName: 'Jane Smith', details: { items: [{itemName: 'Down Jacket', quantity: 1, serviceType: 'Wash & Fold'}], status: LaundryStatus.WASHING, estimatedReady: new Date(Date.now() + 86400000).toISOString() } },
+  { id: 'tx-001', branch: DefaultBranches.JAKARTA_CENTRAL, date: new Date().toISOString(), type: TransactionType.SALE, totalAmount: 55000, customerName: 'Walk-in', details: {} },
+  { id: 'tx-002', branch: DefaultBranches.JAKARTA_CENTRAL, date: new Date().toISOString(), type: TransactionType.RENTAL, totalAmount: 450000, customerName: 'John Doe', details: { items: [{name: 'Tent'}], status: RentalStatus.ACTIVE, endDate: new Date(Date.now() + 86400000 * 2).toISOString() } },
+  { id: 'tx-003', branch: DefaultBranches.BANDUNG_NORTH, date: new Date().toISOString(), type: TransactionType.LAUNDRY, totalAmount: 75000, customerName: 'Jane Smith', details: { items: [{itemName: 'Down Jacket', quantity: 1, serviceType: 'Wash & Fold'}], status: LaundryStatus.WASHING, estimatedReady: new Date(Date.now() + 86400000).toISOString() } },
 ];
 
 // ---- MAIN APP ----
 
 export default function App() {
   const [viewMode, setViewMode] = useState<'admin' | 'landing' | 'shop'>('landing');
-  const [selectedBrand, setSelectedBrand] = useState<BrandProfile>(BRAND_CONFIGS[0]);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'rentals' | 'sales' | 'laundry' | 'settings'>('dashboard');
   const [showAI, setShowAI] = useState(false);
   const [simulatedDomain, setSimulatedDomain] = useState<string | null>(null);
   const [detectedHost, setDetectedHost] = useState<string>('');
 
+  // Dynamic Data Store
+  const [brands, setBrands] = useState<BrandProfile[]>(DEFAULT_BRANDS);
+  const [selectedBrand, setSelectedBrand] = useState<BrandProfile>(DEFAULT_BRANDS[0]);
+
   // Global Store
   const [state, setState] = useState<AppState>({
-    currentBranch: Branch.JAKARTA_CENTRAL,
+    currentBranch: DefaultBranches.JAKARTA_CENTRAL,
     products: MOCK_PRODUCTS,
     transactions: MOCK_TRANSACTIONS,
   });
 
+  // Load Custom Brands from Storage
+  useEffect(() => {
+    const storedBrands = localStorage.getItem('custom_brands');
+    if (storedBrands) {
+        const custom: BrandProfile[] = JSON.parse(storedBrands);
+        setBrands(prev => {
+            // Merge strictly new IDs
+            const existingIds = new Set(prev.map(b => b.id));
+            const newBrands = custom.filter(b => !existingIds.has(b.id));
+            return [...prev, ...newBrands];
+        });
+    }
+  }, []);
+
   // Domain Detection Logic & Persistence
   useEffect(() => {
-    // 1. Get current hostname and normalize it (remove www.)
-    let hostname = window.location.hostname;
-    if (hostname.startsWith('www.')) {
-        hostname = hostname.replace('www.', '');
-    }
+    // 1. Get current hostname
+    let hostname = window.location.hostname.replace('www.', '');
     setDetectedHost(hostname);
     
-    // 2. Check for simulation query param (For this demo environment)
+    // 2. Check for simulation query param
     const searchParams = new URLSearchParams(window.location.search);
     const domainParam = searchParams.get('domain');
 
     // Priority 1: Simulation Param
     if (domainParam) {
         setSimulatedDomain(domainParam);
-        const matchedBrand = BRAND_CONFIGS.find(b => b.domains.includes(domainParam));
+        const matchedBrand = brands.find(b => b.domains.includes(domainParam));
         if (matchedBrand) {
             setSelectedBrand(matchedBrand);
             setViewMode('shop');
             return;
         }
         
-        // Check if it matches a custom binding created by user
+        // Check local bindings
         const bindingsStr = localStorage.getItem('domain_bindings');
         if (bindingsStr) {
              const bindings = JSON.parse(bindingsStr);
              const boundBranchId = bindings[domainParam];
              if (boundBranchId) {
-                const boundBrand = BRAND_CONFIGS.find(b => b.id === boundBranchId);
+                const boundBrand = brands.find(b => b.id === boundBranchId);
                 if (boundBrand) {
                     setSelectedBrand(boundBrand);
                     setViewMode('shop');
@@ -181,17 +191,16 @@ export default function App() {
         }
     }
 
-    // Priority 2: LocalStorage Domain Bindings (Manual Override for Root Domain)
+    // Priority 2: LocalStorage Bindings
     const bindingsStr = localStorage.getItem('domain_bindings');
     if (bindingsStr) {
         const bindings = JSON.parse(bindingsStr);
         const boundBranchId = bindings[hostname];
         if (boundBranchId) {
-             const boundBrand = BRAND_CONFIGS.find(b => b.id === boundBranchId);
+             const boundBrand = brands.find(b => b.id === boundBranchId);
              if (boundBrand) {
                  setSelectedBrand(boundBrand);
                  setViewMode('shop');
-                 // Also set as selected branch for persistence
                  localStorage.setItem('selected_branch_id', boundBranchId);
                  return;
              }
@@ -199,7 +208,7 @@ export default function App() {
     }
 
     // Priority 3: Hardcoded Domain Matches
-    const matchedBrand = BRAND_CONFIGS.find(b => b.domains.includes(hostname));
+    const matchedBrand = brands.find(b => b.domains.includes(hostname));
     if (matchedBrand) {
         setSelectedBrand(matchedBrand);
         setViewMode('shop');
@@ -207,9 +216,9 @@ export default function App() {
         return;
     }
 
-    // Priority 4: Last Visited Shop (Persistence)
+    // Priority 4: Persistence
     const savedBranchId = localStorage.getItem('selected_branch_id');
-    const savedBrand = BRAND_CONFIGS.find(b => b.id === savedBranchId);
+    const savedBrand = brands.find(b => b.id === savedBranchId);
     
     if (savedBrand) {
          setSelectedBrand(savedBrand);
@@ -218,7 +227,7 @@ export default function App() {
          setViewMode('landing');
     }
 
-  }, []);
+  }, [brands]); // Re-run if brands list updates
 
   // Action Handlers
   const handleNewTransaction = (transaction: any) => {
@@ -262,8 +271,16 @@ export default function App() {
   };
 
   const clearSimulation = () => {
-    // Navigate to root without query params
     window.location.href = window.location.pathname;
+  };
+
+  const handleCreateBrand = (newBrand: BrandProfile) => {
+    const updatedBrands = [...brands, newBrand];
+    setBrands(updatedBrands);
+    
+    // Persist custom brands only (not defaults)
+    const customBrands = updatedBrands.filter(b => !DEFAULT_BRANDS.some(db => db.id === b.id));
+    localStorage.setItem('custom_brands', JSON.stringify(customBrands));
   };
 
   // ---- ROUTER VIEW SWITCHING ----
@@ -272,7 +289,7 @@ export default function App() {
     return (
         <>
             <BrandLanding 
-                brands={BRAND_CONFIGS}
+                brands={brands}
                 onSelectBrand={handleEnterShop}
                 onAdminLogin={() => setViewMode('admin')}
             />
@@ -341,9 +358,9 @@ export default function App() {
                     onChange={(e) => setState(prev => ({ ...prev, currentBranch: e.target.value as Branch }))}
                     className="w-full bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 block"
                 >
-                    <option value={Branch.JAKARTA_CENTRAL}>Fourteen PWT (Central)</option>
-                    <option value={Branch.BANDUNG_NORTH}>Fourteen PBG (North)</option>
-                    <option value={Branch.BALI_SOUTH}>Mamas Outdoor (South)</option>
+                    {brands.map(b => (
+                        <option key={b.id} value={b.id}>{b.shortName}</option>
+                    ))}
                 </select>
             </div>
             
@@ -389,7 +406,7 @@ export default function App() {
                 {activeTab === 'rentals' && <RentalSystem state={state} onNewRental={handleNewTransaction} />}
                 {activeTab === 'sales' && <SalesPOS state={state} onNewSale={handleNewTransaction} />}
                 {activeTab === 'laundry' && <LaundryTracker state={state} onUpdateStatus={handleUpdateLaundryStatus} />}
-                {activeTab === 'settings' && <AdminSettings detectedHost={detectedHost} />}
+                {activeTab === 'settings' && <AdminSettings detectedHost={detectedHost} brands={brands} onCreateBrand={handleCreateBrand} />}
             </div>
 
             {showAI && (

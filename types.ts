@@ -1,8 +1,12 @@
-export enum Branch {
-  JAKARTA_CENTRAL = "JKT-Central",
-  BANDUNG_NORTH = "BDG-North",
-  BALI_SOUTH = "BALI-South"
-}
+
+// Branch is now dynamic (string), not a hardcoded Enum
+export type Branch = string;
+
+export const DefaultBranches = {
+  JAKARTA_CENTRAL: "JKT-Central",
+  BANDUNG_NORTH: "BDG-North",
+  BALI_SOUTH: "BALI-South"
+};
 
 export enum TransactionType {
   RENTAL = "RENTAL",
@@ -27,7 +31,7 @@ export enum LaundryStatus {
 
 // New Interface for distinct branding per branch
 export interface BrandProfile {
-  id: Branch;
+  id: string; // Dynamic ID
   name: string;      // e.g., "Fourteen Adventure Purwokerto"
   shortName: string; // e.g., "Fourteen PWT"
   tagline: string;
@@ -45,16 +49,16 @@ export interface Product {
   id: string;
   name: string;
   category: "Tent" | "Backpack" | "Clothing" | "Accessories" | "Cooking";
-  // Prices are now branch-specific
-  priceSale: Record<Branch, number>;
-  priceRentPerDay: Record<Branch, number>; 
-  stock: Record<Branch, number>;
+  // Prices are now branch-specific using dynamic keys
+  priceSale: Record<string, number>;
+  priceRentPerDay: Record<string, number>; 
+  stock: Record<string, number>;
   image?: string;
 }
 
 export interface Transaction {
   id: string;
-  branch: Branch;
+  branch: string;
   date: string;
   type: TransactionType;
   totalAmount: number;
@@ -90,7 +94,7 @@ export interface SaleTransaction extends Transaction {
 
 // Global Store State Interface
 export interface AppState {
-  currentBranch: Branch;
+  currentBranch: string;
   products: Product[];
   transactions: Transaction[];
 }
