@@ -5,11 +5,15 @@ import { createClient } from '@supabase/supabase-js';
 
 const getEnvVar = (key: string) => {
   // 1. Try Vite (Standard for this project structure)
-  // @ts-ignore
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
+  try {
     // @ts-ignore
-    const viteVar = import.meta.env[`VITE_${key}`] || import.meta.env[key];
-    if (viteVar) return viteVar;
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      // @ts-ignore
+      const viteVar = import.meta.env[`VITE_${key}`] || import.meta.env[key];
+      if (viteVar) return viteVar;
+    }
+  } catch (e) {
+    // Ignore error if import.meta is not available
   }
 
   // 2. Try Standard Process Env (Fallback for other build tools)
