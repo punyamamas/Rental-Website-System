@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AppState, Product, RentalStatus, TransactionType, BrandProfile } from '../types';
-import { MapPin, Calendar, User, Search, ArrowLeft, ArrowRight, Instagram, Facebook, Phone } from 'lucide-react';
+import { MapPin, Calendar, User, Search, ArrowLeft, ArrowRight, Instagram, Facebook, Phone, Image as ImageIcon } from 'lucide-react';
 
 interface CustomerPortalProps {
   state: AppState;
@@ -18,12 +18,22 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ state, brand, on
   const [duration, setDuration] = useState(3);
 
   // Filter products based on the specific brand's branch ID
-  const products = state.products.filter(p => {
+  const products = useMemo(() => state.products.filter(p => {
     const hasStock = p.stock[brand.id] > 0;
     const isRentable = p.priceRentPerDay[brand.id] > 0;
     const matchCategory = selectedCategory === 'All' || p.category === selectedCategory;
     return hasStock && isRentable && matchCategory;
-  });
+  }), [state.products, brand.id, selectedCategory]);
+
+  // Dynamic Categories based on products available in this branch
+  const categories = useMemo(() => {
+    const availableCategories = new Set(
+        state.products
+            .filter(p => p.stock[brand.id] > 0 && p.priceRentPerDay[brand.id] > 0)
+            .map(p => p.category)
+    );
+    return ['All', ...Array.from(availableCategories).sort()];
+  }, [state.products, brand.id]);
 
   const handleBook = () => {
     if (!bookingItem || !customerName) return;
@@ -133,7 +143,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ state, brand, on
             </div>
             
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {['All', 'Tent', 'Backpack', 'Accessories', 'Cooking'].map(cat => (
+                {categories.map(cat => (
                     <button 
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
@@ -157,12 +167,22 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ state, brand, on
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products.map(product => (
                     <div key={product.id} className="group bg-slate-900 rounded-3xl p-4 border border-slate-800 hover:border-slate-600 transition-all duration-300 hover:shadow-2xl hover:shadow-black/50">
-                        <div className="aspect-square bg-slate-800 rounded-2xl mb-4 flex items-center justify-center text-6xl relative overflow-hidden">
+                        <div className="aspect-square bg-slate-800 rounded-2xl mb-4 flex items-center justify-center text-6xl relative overflow-hidden group-hover:scale-[1.02] transition-transform">
                              <div className={`absolute inset-0 bg-gradient-to-br ${brand.theme.bgGradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500`}></div>
-                            <span className="relative z-10 transition-transform duration-500 group-hover:scale-110">
-                                {product.category === 'Tent' ? '⛺' : product.category === 'Backpack' ? '🎒' : product.category === 'Cooking' ? '🍳' : '🔦'}
-                            </span>
-                            <div className="absolute top-3 right-3 bg-black/40 backdrop-blur px-2 py-1 rounded-lg text-xs font-mono text-white border border-white/10">
+                            
+                            {product.image ? (
+                                <img src={product.image} alt={product.name} className="w-full h-full object-cover rounded-2xl" />
+                            ) : (
+                                <span className="relative z-10 transition-transform duration-500 group-hover:scale-110">
+                                    {product.category.toLowerCase().includes('tent') ? '⛺' : 
+                                     product.category.toLowerCase().includes('backpack') ? '🎒' : 
+                                     product.category.toLowerCase().includes('cooking') ? '🍳' : 
+                                     product.category.toLowerCase().includes('shoe') || product.category.toLowerCase().includes('foot') ? '🥾' :
+                                     '🔦'}
+                                </span>
+                            )}
+                            
+                            <div className="absolute top-3 right-3 bg-black/40 backdrop-blur px-2 py-1 rounded-lg text-xs font-mono text-white border border-white/10 z-20">
                                 {product.stock[brand.id]} left
                             </div>
                         </div>
@@ -235,8 +255,12 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ state, brand, on
                 </div>
                 <div className="p-8">
                     <div className="flex items-center gap-4 mb-8 bg-slate-800 p-4 rounded-2xl border border-slate-700">
-                        <div className="w-12 h-12 bg-slate-700 rounded-xl flex items-center justify-center text-2xl">
-                             {bookingItem.category === 'Tent' ? '⛺' : '🎒'}
+                        <div className="w-16 h-16 bg-slate-700 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                             {bookingItem.image ? (
+                                 <img src={bookingItem.image} alt={bookingItem.name} className="w-full h-full object-cover" />
+                             ) : (
+                                 <span className="text-2xl">{bookingItem.category.includes('Tent') ? '⛺' : '🎒'}</span>
+                             )}
                         </div>
                         <div>
                             <h3 className="font-bold text-white">{bookingItem.name}</h3>

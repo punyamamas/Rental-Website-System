@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AppState, Product, Branch } from '../types';
-import { Package, Plus, Edit, Save, X, Search, Archive } from 'lucide-react';
+import { Package, Plus, Edit, Save, X, Search, Archive, Image as ImageIcon } from 'lucide-react';
 
 interface InventoryMasterProps {
   state: AppState;
@@ -37,6 +37,7 @@ export const InventoryMaster: React.FC<InventoryMasterProps> = ({ state, onSaveP
       id: '',
       name: '',
       category: 'Tent',
+      image: '',
       stock: { [currentBranchId]: 0 },
       priceRentPerDay: { [currentBranchId]: 0 },
       priceSale: { [currentBranchId]: 0 },
@@ -97,6 +98,7 @@ export const InventoryMaster: React.FC<InventoryMasterProps> = ({ state, onSaveP
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-900 text-slate-400 text-xs uppercase sticky top-0 z-10">
               <tr>
+                <th className="p-4 font-bold tracking-wider w-16">Img</th>
                 <th className="p-4 font-bold tracking-wider">Item Name</th>
                 <th className="p-4 font-bold tracking-wider">Category</th>
                 <th className="p-4 font-bold tracking-wider text-right">Stock (This Branch)</th>
@@ -113,6 +115,15 @@ export const InventoryMaster: React.FC<InventoryMasterProps> = ({ state, onSaveP
 
                 return (
                   <tr key={product.id} className="hover:bg-slate-700/50 transition-colors group">
+                    <td className="p-4">
+                        <div className="w-10 h-10 rounded bg-slate-700 flex items-center justify-center overflow-hidden border border-slate-600">
+                            {product.image ? (
+                                <img src={product.image} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                                <ImageIcon className="w-5 h-5 text-slate-500" />
+                            )}
+                        </div>
+                    </td>
                     <td className="p-4">
                       <div className="font-bold text-white">{product.name}</div>
                       <div className="text-xs text-slate-500 font-mono">{product.id}</div>
@@ -148,7 +159,7 @@ export const InventoryMaster: React.FC<InventoryMasterProps> = ({ state, onSaveP
               })}
               {filteredProducts.length === 0 && (
                   <tr>
-                      <td colSpan={6} className="p-8 text-center text-slate-500">
+                      <td colSpan={7} className="p-8 text-center text-slate-500">
                           No items found. Click "Add New Item" to create one.
                       </td>
                   </tr>
@@ -171,7 +182,7 @@ export const InventoryMaster: React.FC<InventoryMasterProps> = ({ state, onSaveP
               </button>
             </div>
             
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
               {/* Global Fields */}
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Item Name (Global)</label>
@@ -186,18 +197,42 @@ export const InventoryMaster: React.FC<InventoryMasterProps> = ({ state, onSaveP
               </div>
 
               <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Image URL</label>
+                <div className="flex gap-2">
+                    <input 
+                    type="text" 
+                    value={editingProduct.image || ''}
+                    onChange={e => setEditingProduct({...editingProduct, image: e.target.value})}
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="https://example.com/image.jpg"
+                    />
+                    {editingProduct.image && (
+                        <div className="w-10 h-10 rounded bg-slate-700 flex-shrink-0 overflow-hidden border border-slate-600">
+                            <img src={editingProduct.image} className="w-full h-full object-cover" alt="Preview" />
+                        </div>
+                    )}
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
-                <select 
+                <input 
+                   list="category-options"
+                   type="text"
                    value={editingProduct.category}
-                   onChange={e => setEditingProduct({...editingProduct, category: e.target.value as any})}
+                   onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}
                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                >
-                    <option value="Tent">Tent</option>
-                    <option value="Backpack">Backpack</option>
-                    <option value="Cooking">Cooking</option>
-                    <option value="Accessories">Accessories</option>
-                    <option value="Clothing">Clothing</option>
-                </select>
+                   placeholder="Select or type custom category..."
+                />
+                <datalist id="category-options">
+                    <option value="Tent" />
+                    <option value="Backpack" />
+                    <option value="Cooking" />
+                    <option value="Accessories" />
+                    <option value="Clothing" />
+                    <option value="Footwear" />
+                    <option value="Safety Gear" />
+                </datalist>
               </div>
 
               <div className="py-2 border-t border-slate-700 my-2">

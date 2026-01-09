@@ -48,7 +48,7 @@ export interface BrandProfile {
 export interface Product {
   id: string;
   name: string;
-  category: "Tent" | "Backpack" | "Clothing" | "Accessories" | "Cooking";
+  category: string; // Changed to string to allow custom categories
   // Prices are now branch-specific using dynamic keys
   priceSale: Record<string, number>;
   priceRentPerDay: Record<string, number>; 
